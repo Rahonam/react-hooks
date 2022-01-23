@@ -1,70 +1,131 @@
-# Getting Started with Create React App
+# React Hooks
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+React 16.8.0 is the first release to support [Hooks](https://reactjs.org/docs/hooks-intro.html).
+Can be used to manage React state and component lifecycle features.
 
-## Available Scripts
+## useState
+- Returns a stateful value, and a function to update it.
+- Accepts optional initial state
+- We can manage component state, like `setState` in React classes, but cleaner.
+```
+[stateful_value_getter,new_value_setter] = useState(initial_state)
+```
 
-In the project directory, you can run:
+## useEffect
+- Accepts a function(say effect_function) and optional dependency list(say dep_list).
+- effect_function will be invoked
+    - if the values in the dep_list change
+    - after every render, if no dep_list provided
+    - after first render only, if dep_list is empty
+- effect_function can return optional cleanup function.
+- We can perform side effects from a functional component. Lifecycle such as `componentDidMount`, `componentDidUpdate`, and `componentWillUnmount` can be hooked into.
+```
+useEffect(()=>{
+    // Component did mount/update, run side effects here
 
-### `npm start`
+    return ()=>{
+        // Component will unmount, run cleanup here
+    }
+},[dep_list])
+```
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## useContext
+- Accepts a context object (from context API React.createContext).
+- Returns the current context value, from the nearest context provider above in the tree.
+- Component will always re-render when the context value changes.
+- This hook is equivalent to `Consumer` from the React's context API.
+```
+// global context creation
+export const UserContext = createContext(initial_value);
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+// wrap using Provider
+<UserContext.Provider value={subset_of_initial_value}>
+    <ConsumerComponent></ConsumerComponent>
+</UserContext.Provider>
 
-### `npm test`
+// ConsumerComponent
+const stateful_value_getter = useContext(UserContext);
+```
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## useRef
+- Returns a mutable `ref` object(say ref_obj).
+- Accepts initial value, to initialize `.current` property of ref_obj.
+- The returned object will persist for the full lifetime of the component.
+- Can be used to access DOM element, to store mutable value as instance variable or to just count renders.
+```
+const paraRef = useRef(null);
+<p ref={paraRef}></p>
+```
 
-### `npm run build`
+## useReducer
+- Returns the current state and a dispatch method.
+- dispatch method enables to fire actions instead of directly modifying the state.
+- Accepts a reducer of type `(state, action) => newState`, and initial state.
+- Accepts optional 3rd argument, a function for lazy initialization.
+```
+const reducer = (currentState,action)=>{
+    switch (action.type) {
+        case 'value':
+            return updatedState
+        default:
+            return currentState;
+    }
+}
+const lazyInit = (initialState) => initialState.someModification();
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+const [state,dispatch] = useReducer(reducer,initialState,lazyInit)
+<button onClick={() => dispatch({type: 'value'})}>Click</button>
+```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## useMemo
+- Accepts a function and dependency list(say dep_list).
+- Returns a `memoized value`.
+- useMemo will only recompute the memoized value
+    - if the values in the dep_list change
+    - after every render, if no dep_list provided
+    - after first render only, if dep_list is empty
+```
+const memoized_value = useMemo(()=>{
+    // expensive computation
+    return value
+},[]);
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## useCallback
+- Accepts a function and dependency list(say dep_list).
+- Returns a memoized callback function.
+- useful when passing callbacks to optimized child components that rely on reference equality to prevent unnecessary renders (e.g. shouldComponentUpdate).
+```
+const childCallback = ()=>{}
+const memoized_callback = useCallback(childCallbacl,[])
+```
 
-### `npm run eject`
+## useImperativehandler
+- Accepts ref object, a function and dependency list.
+- Customizes the instance value of child that is exposed to parent components when using ref.
+- Child must be wrapped in `forwardref` to accept ref.
+```
+// child component
+function ChildComponent(props, ref) {
+  const inputRef = useRef();
+  useImperativeHandle(ref, () => ({
+    focus: () => {
+      inputRef.current.focus();
+    }
+  }));
+  return <input ref={inputRef} />;
+}
+ChildComponent = forwardRef(ChildComponent);
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+// parent component
+inputRef.current.focus()
+...
+<ChildComponent ref={inputRef} />
+```
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+## useLayoutEffect
+- The signature is identical to useEffect.
+- Invoked synchronously after all DOM mutations and before screen paint.
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+## useDebugValue
+- Used to display a label for custom hooks in React DevTools.
